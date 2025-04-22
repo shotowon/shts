@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/shotowon/shts/internal/shts/run"
+	"github.com/shotowon/shts/internal/cli/run"
 	"github.com/spf13/cobra"
 )
 
