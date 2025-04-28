@@ -1,34 +1,46 @@
 package run
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/shotowon/shts/internal/config"
+	"github.com/shotowon/shts/internal/shts/sshuttle"
 	"github.com/spf13/cobra"
 )
 
-type runConfig struct {
+type commandConfig struct {
 	ConfigPath string
-	MasterKey  string
-	MasterKeys []string
 }
 
 var (
-	runCfg = runConfig{}
+	commandCfg = commandConfig{}
 )
 
 var Command = &cobra.Command{
 	Use:   "run",
 	Short: "This command runs multiple sshuttles",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println(runCfg.ConfigPath)
-		fmt.Println(runCfg.MasterKey)
-		fmt.Println(runCfg.MasterKeys)
-		return nil
-	},
+	RunE:  commandRunE,
+}
+
+func commandRunE(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(commandCfg.ConfigPath) == "" {
+		return errors.New("run: path to config must be specified")
+	}
+
+	cfg, err := config.Parse(commandCfg.ConfigPath)
+	if err != nil {
+		return fmt.Errorf("run: failed to parse config: %w", err)
+	}
+
+	if err = sshuttle.Run(cfg); err != nil {
+		return fmt.Errorf("run: failed to exec sshuttles")
+	}
+
+	return nil
 }
 
 func init() {
-	Command.PersistentFlags().StringSliceVarP(&runCfg.MasterKeys, "keys", "K", nil, "Pass master key file for each sshuttle (must be listed in order in which sshutles are listed in config file)")
-	Command.PersistentFlags().StringVarP(&runCfg.MasterKey, "key", "k", "", "This single master key file will be used to connect to all shhuttles in configuration file")
-	Command.PersistentFlags().StringVarP(&runCfg.ConfigPath, "config", "c", "", "YAML configuration file (list sshuttles here)")
+	Command.PersistentFlags().StringVarP(&commandCfg.ConfigPath, "config", "c", "", "YAML configuration file (list sshuttles here)")
 }
