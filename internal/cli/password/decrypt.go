@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/shotowon/shts/internal/shts/crypto"
+	"github.com/shotowon/shts/internal/shts"
 	"github.com/spf13/cobra"
 )
 
@@ -30,19 +30,9 @@ func decryptRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("empty cipher-text file flag")
 	}
 
-	cipherText, err := os.ReadFile(decryptCfg.CipherTextFile)
+	password, err := shts.DecryptFromFiles(decryptCfg.MasterKeyFile, decryptCfg.CipherTextFile)
 	if err != nil {
-		return fmt.Errorf("failed to read password file: %w", err)
-	}
-
-	masterKey, err := os.ReadFile(decryptCfg.MasterKeyFile)
-	if err != nil {
-		return fmt.Errorf("failed to read master-key file: %w", err)
-	}
-
-	password, err := crypto.Decrypt(string(masterKey), string(cipherText))
-	if err != nil {
-		return fmt.Errorf("failed to decrypt password: %w", err)
+		return err
 	}
 
 	if len(decryptCfg.Out) != 0 {
