@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
 
 	"github.com/shotowon/shts/internal/config"
 	v1 "github.com/shotowon/shts/internal/config/v1"
+	"github.com/shotowon/shts/internal/shts"
 )
 
 func Run(cfg *config.Config) error {
@@ -27,26 +27,49 @@ func Run(cfg *config.Config) error {
 	return nil
 }
 
-func ExecPassword(masterKey string, password string, remote string, subnets []string) error {
+func ExecPassword(mkeyPath string, passFile string, remote string, subnets []string) error {
 	args := make([]string, 0, len(subnets)+2)
 	args = append(args, "-r")
 	args = append(args, remote)
 	args = append(args, subnets...)
 
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
 	cmd := exec.Command("sshuttle", args...)
 	cmd.Env = os.Environ()
-	askpass := fmt.Sprintf("SSH_ASKPASS='%s password decrypt -p %s -k %s'", path.Join(wd, os.Args[0]), path.Join(wd, password), path.Join(wd, masterKey))
+	askpass := fmt.Sprintf("SSH_ASKPASS='%s'", os.Args[0])
 	cmd.Env = append(cmd.Env, askpass)
-	cmd.Env = append(cmd.Env, "SSH_ASKPASS_REQUIRE=force")
+	cmd.Env = append(cmd.Env, "%s='%s'", shts.EnvCommand, shts.CmdAskpass)
+	cmd.Env = append(cmd.Env, "%s=%s", shts.EnvMkeyFile, mkeyPath)
+	cmd.Env = append(cmd.Env, "%s=%s", shts.EnvPassFile, passFile)
 
 	stderr, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to exec sshutle via password: %w\nout: %s", err, string(stderr))
+	}
+
+	return nil
+}
+
+func ConnectPassword(mkeyPath string, passFile string, remote string) error {
+	args := make([]string, 0, 1)
+	args = append(args, remote)
+
+	cmd := exec.Command("ssh", args...)
+	cmd.Env = os.Environ()
+
+	askpass := fmt.Sprintf("SSH_ASKPASS=%s", os.Args[0])
+	cmd.Env = append(cmd.Env, askpass)
+	cmd.Env = append(cmd.Env, "SSH_ASKPASS_REQUIRE=force")
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", shts.EnvCommand, shts.CmdAskpass))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", shts.EnvMkeyFile, mkeyPath))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", shts.EnvPassFile, passFile))
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("failed to exec ssh via password: %w", err)
 	}
 
 	return nil

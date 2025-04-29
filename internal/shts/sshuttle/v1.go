@@ -18,6 +18,7 @@ func RunV1(cfg *v1.Config) error {
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "error sshuttle: %v\n", err)
 			}
+			fmt.Println("donee")
 			wg.Done()
 		}
 	}
