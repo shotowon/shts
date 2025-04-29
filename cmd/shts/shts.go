@@ -1,29 +1,39 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/shotowon/shts/internal/cli"
+	"github.com/shotowon/shts/internal/shts"
 )
 
 func main() {
-	/*
-		key := "AAEEBBCCDDFFEE11"
-		msg := "hehedsadas"
+	envCommand := os.Getenv(shts.EnvCommand)
 
-		encrypted, err := crypto.Encrypt(key, msg)
-		if err != nil {
-			panic(err)
+	switch envCommand {
+	case shts.CmdAskpass:
+		mkeyPath := os.Getenv(shts.EnvMkeyFile)
+		if len(mkeyPath) == 0 {
+			fmt.Fprintln(os.Stderr, "Please provide master key to askpass")
+			return
 		}
 
-		fmt.Printf("encrypted: %s\n", encrypted)
-
-		decrypted, err := crypto.Decrypt(key, encrypted)
-		if err != nil {
-			panic(err)
+		passwordPath := os.Getenv(shts.EnvPassFile)
+		if len(passwordPath) == 0 {
+			fmt.Fprintln(os.Stderr, "Please provide password to askpass")
+			return
 		}
 
-		fmt.Printf("decrypted: %s\n", decrypted)
+		password, err := shts.DecryptFromFiles(mkeyPath, passwordPath)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
 
-		os.Exit(0)
-	*/
+		fmt.Println(password)
+		return
+	}
+
 	cli.Execute()
 }
