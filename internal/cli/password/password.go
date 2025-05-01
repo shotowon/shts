@@ -16,6 +16,5 @@ var Command = &cobra.Command{
 }
 
 func init() {
-	Command.AddCommand(encrypt)
-	Command.AddCommand(decrypt)
+	Command.AddCommand(newCmd)
 }
