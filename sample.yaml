@@ -1,0 +1,13 @@
+version: 1
+connections:
+  - remote: "vagrant@10.24.60.10"
+    subnets:
+      - "10.24.60.0/24"
+    password: "./vagrant-pass"
+    master-key: "./tests/key"
+    accept-host-key: yes
+  - remote: "vagrant@10.24.70.10"
+    subnets:
+      - "10.24.70.0/24"
+    private-key: "/home/paprika/projects/shts/tests/sshuttle/router-nginx/n1"
+    accept-host-key: yes
