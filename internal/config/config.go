@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ilyakaznacheev/cleanenv"
 	v1 "github.com/shotowon/shts/internal/config/v1"
+	"gopkg.in/yaml.v3"
 )
 
 type Version int
@@ -20,13 +20,13 @@ type Config struct {
 }
 
 func Parse(filepath string) (*Config, error) {
-	file, err := os.OpenFile(filepath, os.O_RDONLY, 0644)
+	fileContent, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("Config: failed to open config file: %w", err)
 	}
 
 	cfg := new(Config)
-	if err = cleanenv.ParseYAML(file, cfg); err != nil {
+	if err = yaml.Unmarshal(fileContent, cfg); err != nil {
 		return nil, fmt.Errorf("Config: failed to parse YAML of base config file: %w", err)
 	}
 
